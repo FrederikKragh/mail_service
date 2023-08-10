@@ -23,7 +23,7 @@ class GoogleController < ApplicationController
       msg = gmail.get_user_message('me', msg.id, format:"full")
       Email.create(
         subject: msg.payload.headers.find { |h| h.name == "Subject" }.value,
-        from: msg.payload.headers.find { |h| h.name == "From" }.value,
+        sender: msg.payload.headers.find { |h| h.name == "From" }.value,
         date: msg.payload.headers.find { |h| h.name == "Date" }.value.to_date,
       )
     end

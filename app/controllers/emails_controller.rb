@@ -16,14 +16,16 @@ class EmailsController < ApplicationController
       @end_date = Date.today
     end
 
+    emails = Email.where(date: @start_date..@end_date)
+
     if params[:sender].present?
-      @emails = @emails.where(from: params[:sender])
+      emails = emails.where("sender LIKE ?",  "%#{params[:sender]}%")
     end
 
-    @emails = Email.where(date: @start_date..@end_date)
+    @emails = emails
 
     @email_count = {
-      total: @emails.count,
+      total: emails.count,
       start_date: @start_date,
       end_date: @end_date
     }
