@@ -2,6 +2,7 @@ class GoogleController < ApplicationController
   Gmail = Google::Apis::GmailV1
 
   def new
+    # Compose auth url
     url = client.auth_code.authorize_url(
       redirect_uri: redirect_uri,
       scope: scope,
@@ -18,7 +19,7 @@ class GoogleController < ApplicationController
     # Instantiate service
     gmail.authorization = access_token.token
 
-    # Save messages
+    # Save messages as Email records
     user_messages.messages.each do |msg|
       msg = gmail.get_user_message('me', msg.id, format:"full")
       Email.create(
@@ -37,6 +38,7 @@ class GoogleController < ApplicationController
     @gmail ||= Gmail::GmailService.new
   end
 
+  # Fetch message ids for the latest 200 messages
   def user_messages
     @user_messages ||= gmail.list_user_messages('me', max_results: 200)
   end

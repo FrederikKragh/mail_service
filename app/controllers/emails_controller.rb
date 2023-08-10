@@ -18,6 +18,7 @@ class EmailsController < ApplicationController
 
     emails = Email.where(date: @start_date..@end_date)
 
+    # Query by sender
     if params[:sender].present?
       emails = emails.where("sender LIKE ?",  "%#{params[:sender]}%")
     end
