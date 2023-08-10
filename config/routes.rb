@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
-  root "statistics#index"
+  root "emails#index"
   
-  get :callback, to: "emails#callback"
-  resources :emails, only: %i[new index show] 
+  get :callback, to: "google#callback"
+  resources :emails, only: %i[index show] 
+  resources :google, only: %i[new], path: "google"
 end
