@@ -1,6 +1,30 @@
 class EmailsController < ApplicationController
   Gmail = Google::Apis::GmailV1
 
+  def index
+    @emails = Email.all
+
+    if params[:start_date].present?
+      @start_date = Date.parse(params[:start_date])
+    else
+      @start_date = Date.today - 7.days
+    end 
+
+    if params[:end_date].present?
+      @end_date = Date.parse(params[:end_date])
+    else
+      @end_date = Date.today
+    end
+
+    @emails = Email.where(date: @start_date..@end_date)
+
+    @email_count = {
+      total: @emails.count,
+      start_date: @start_date,
+      end_date: @end_date
+    }
+  end
+
   def new
     url = client.auth_code.authorize_url(
       redirect_uri: redirect_uri,
@@ -10,6 +34,10 @@ class EmailsController < ApplicationController
     )
 
     redirect_to url, allow_other_host: true
+  end
+
+  def show
+    @email = Email.find(params[:id])
   end
 
   def callback
@@ -22,15 +50,16 @@ class EmailsController < ApplicationController
     user_messages.messages.each do |msg|
       msg = gmail.get_user_message('me', msg.id, format:"full")
       Email.create(
-        subject: msg.subject,
-        from: msg.from
+        subject: msg.payload.headers.find { |h| h.name == "Subject" }.value,
+        from: msg.payload.headers.find { |h| h.name == "From" }.value,
+        date: msg.payload.headers.find { |h| h.name == "Date" }.value.to_date,
       )
     end
 
     email_id = user_messages.messages.first.id
     email = Mail.new(gmail.get_user_message('me', email_id).payload)
 
-    render plain: email
+    redirect_to emails_path
   end
 
   private
@@ -40,7 +69,7 @@ class EmailsController < ApplicationController
   end
 
   def user_messages
-    @user_messages ||= gmail.list_user_messages('me', max_results: 10)
+    @user_messages ||= gmail.list_user_messages('me', max_results: 50)
   end
 
   def get_token(code)
